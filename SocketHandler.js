@@ -2,6 +2,7 @@ class SocketHandler
 {
     constructor(wss)
     {
+        console.log(wss);
         this.state =
         {
             wss: wss

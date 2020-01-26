@@ -31,6 +31,7 @@ function getStatus()
                     return ({
                         name: process.name,
                         pid: process.pid,
+                        status: process.pm2_env.status,
                         node_version: process.pm2_env.node_version,
                         processCreated: process.pm2_env.created_at,
                         upTime: process.pm2_env.pm_uptime,
@@ -61,6 +62,7 @@ function monitorStatus()
             {                
                 let data = JSON.parse(stdout).map(process =>
                 {
+                    // console.log(process.pm2_env.status)
                     return ({
                         name: process.name,
                         pid: process.pid,
@@ -90,7 +92,7 @@ function monitorStatus()
                         if(state.processes[index].status !== process.status)
                         {
                             // console.log('something is different', process.status);
-                            global.broadcast(`<[${process.name}]:[${new moment().format('MM/DD/YYYY hh:mm:ss A')}] <WARN>> Process has an updated status of: ${process.status}`)
+                            global.broadcast(`<[${process.name}]:[${new moment().format('MM/DD/YYYY hh:mm:ss A')}] <CRITICAL>> Process has an updated status of: ${process.status}`)
                             state.processes[index] = process;
                         }
                     }
@@ -118,12 +120,10 @@ function SendLogs(processes)
                 state.spawnProcess.push(newInstance);
                 newInstance.spawnInstance.stdout.on('data', data =>
                 {
-                    console.log(data.toString());
                     global.broadcast(data.toString());
                 });
                 newInstance.spawnInstance.stderr.on('data', data=>
                 {
-                    console.log(data.toString());
                     global.broadcast(data.toString());
                 })
                 newInstance.spawnInstance.on('close', code => {
@@ -131,10 +131,6 @@ function SendLogs(processes)
                 })
             }
         });
-    // console.log(processes);
-    // let spawn = spawn('pm2', ['logs', 'ACI', '--raw']);
-    // spawn.stdout.on()
-    // global.broadcast('whatever the fuck I want my socket to hear')
 }
 
 module.exports = {beginScrape, getStatus}
