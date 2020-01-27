@@ -3,51 +3,57 @@ const express = require('express');
 const app = express();
 const WebSocket = require('ws');
 const SocketHandler = require('./SocketHandler');
-const {name} = require('./package.json');
+const { name } = require('./package.json');
 const server = require('http').createServer(app);
 const moment = require('moment');
 const PORT = 8080;
 const socket = require('socket.io');
+const { exec } = require('child_process');
 
 const wss = socket(server);
-function msg(msg)
-{
-    wss.emit('broadcast', {msg});
+function msg(msg) {
+    wss.emit('broadcast', { msg });
 }
 global.broadcast = msg;
 
-const {log, warn, error} = console;
-console.log = (...msg) => 
-{
+const { log, warn, error } = console;
+console.log = (...msg) => {
     global.broadcast(`<[${name}]:[${PORT}]:[${new moment().format('MM/DD/YYYY hh:mm:ss A')}] <LOG>> ${msg.join(' ')}`);
     return log(`<[${name}]:[${PORT}]:[${new moment().format('MM/DD/YYYY hh:mm:ss A')}] <LOG>> ${msg.join(' ')}`);
 };
-console.error = (...msg) => 
-{
+console.error = (...msg) => {
     global.broadcast(`<[${name}]:[${PORT}]:[${new moment().format('MM/DD/YYYY hh:mm:ss A')}] <ERROR>> ${msg.join(' ')}`);
     return error(`<[${name}]:[${PORT}]:[${new moment().format('MM/DD/YYYY hh:mm:ss A')}] <ERROR>> ${msg.join(' ')}`);
 };
-console.warn = (...msg) => 
-{
+console.warn = (...msg) => {
     global.broadcast(`<[${name}]:[${PORT}]:[${new moment().format('MM/DD/YYYY hh:mm:ss A')}] <WARN>> ${msg.join(' ')}`);
     return warn(`<[${name}]:[${PORT}]:[${new moment().format('MM/DD/YYYY hh:mm:ss A')}] <WARN>> ${msg.join(' ')}`);
 };
 
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type');
     return next();
-  });
+});
 
-app.get('/getstatus', (request, response) =>
-{
+app.get('/getstatus', (request, response) => {
     PM2Scraper.getStatus()
-    .then(result => response.status(200).send(result));
+        .then(result => response.status(200).send(result));
 })
 
-server.listen(PORT, () =>
-{
+app.get('/looper', (request, response) => {
+    // url /lopper?app=tes&command=stop
+    exec(`pm2 stop ${request.query.app}`);
+})
+
+app.get('/control', (request, response) => {
+    // url /control?app=tes&command=stop
+    exec(`pm2 ${request.query.command} ${request.query.app}`);
+    response.sendStatus(200);
+});
+
+server.listen(PORT, () => {
     console.log('listening');
 })
 
@@ -57,7 +63,6 @@ PM2Scraper.beginScrape();
 
 console.log('starting')
 
-setInterval(() =>
-{
+setInterval(() => {
     console.log('test')
 }, 1000)

@@ -100,6 +100,7 @@ function monitorStatus()
                     {
                         console.log('does not have process');
                         state.processes.push(process);
+                        SendLogs([process]);
                     }
                 })
             new Promise(resolve => setTimeout(monitorStatus, 1000));
